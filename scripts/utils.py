@@ -17,7 +17,7 @@ def get_sql_conn(sql_conf: configparser.SectionProxy, dbname: str = None):
     return prodution_db
 
 
-def push_to_sql(data: pd.DataFrame, config: configparser.ConfigParser,section):
+def push_to_sql(data: pd.DataFrame, config: configparser.ConfigParser,db,section):
     table = config[section]['table']
     pk = config[section]['pk']
     df_columns = list(data)
@@ -26,8 +26,8 @@ def push_to_sql(data: pd.DataFrame, config: configparser.ConfigParser,section):
     updates = ','.join([col + '=excluded.' + col for col in df_columns])
     insert_stmt = "INSERT INTO {} ({}) {} ON CONFLICT ({}) DO UPDATE SET {}". \
         format(table, columns, values, pk, updates)
-    conn = get_sql_conn(config['sql-prod'],
-                        config.get('sql-prod', 'dbname'))
+    conn = get_sql_conn(config[db],
+                        config.get(db, 'dbname'))
     cur = conn.cursor()
     psycopg2.extras.execute_batch(cur, insert_stmt, data.values)
     conn.commit()
